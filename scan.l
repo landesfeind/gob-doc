@@ -48,8 +48,8 @@ static void parse_class(const char *line, bool is_abstract){
 	if(p)
 		*p = '\0';
 	printf("class ");
-	print_class_with_namespace(classname);
 	strncpy(my_class, classname, CHAR_BUFFER_LENGTH);
+	print_class_with_namespace(classname);
 	printf(" : ");
 	print_class_with_namespace(parentclass);
 
@@ -151,7 +151,13 @@ class{WS}+{CLASSNAME}{WS}+from{WS}+{CLASSNAME} {
 		p = strpbrk(start, " (");
 		if( p )
 			*p = '\0';
-		print_class_with_namespace(start);
+		if(strcmp(start, "self") == 0){
+			print_class_with_namespace(my_class);
+			printf(" *self");
+		}
+		else {
+			print_class_with_namespace(start);
+		}
 
 		start = p ? strchr(p+1, ',') : NULL;
 		if( start ){
