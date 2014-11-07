@@ -119,6 +119,11 @@ class{WS}+{CLASSNAME}{WS}+from{WS}+{CLASSNAME} {
 	BEGIN(GOB2_IN_CLASS);
 }
 
+<GOB2_IN_CLASS>^{WS}*(constructor|init|dispose|finalize){WS}*\({WS}*self{WS}*\) { 
+	BEGIN(GOB2_IN_METHOD);
+	depth = 0;
+}
+
 <GOB2_IN_CLASS>^{WS}*(private|public|protected){WS}+{CLASSNAME}{WS}+\*?[a-z_]+{WS}*\(.*\).*\{ { 
 	char *start;
 	char *p2;
