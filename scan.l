@@ -21,11 +21,16 @@
 extern int errno;
 
 static int depth = -1;
-static char my_class[CHAR_BUFFER_LENGTH];
-static char my_func_prefix[CHAR_BUFFER_LENGTH];
+static char my_class[CHAR_BUFFER_LENGTH] = {0};
+static char my_func_prefix[CHAR_BUFFER_LENGTH] = {0};
+
+static char current_property[CHAR_BUFFER_LENGTH] = {0};
 
 static void print_class_with_namespace(char *classname){
-	char *p = strtok(classname, ":");
+	char copy[CHAR_BUFFER_LENGTH] = {0};
+	strncpy(copy, classname, CHAR_BUFFER_LENGTH);
+
+	char *p = strtok(copy, ":");
 	printf("%s", p);
 	while(p){
 		p = strtok(NULL, ":");
@@ -47,12 +52,14 @@ int yywrap(void) { return 1; }
 %x IN_METHOD_DEF
 %x IN_METHOD
 %x IN_METHOD_ARGUMENTS
+%x IN_METHOD_ARGUMENT_CHECK
 %x AFTER_METHOD_ARGUMENTS
 %x IN_PROPERTY_DEF
 %x IN_PROPERTY
 %x IN_PROPERTY_SETGET
 %x IN_VARIABLE_DEF
 %x IN_VARIABLE
+%x IN_CLASS_COMMENT
 %x IN_COMMENT
 %x IN_C_CODE
 %x IN_METHOD_OR_VARIABLE_START
@@ -75,6 +82,7 @@ FUNCNAME [a-zA-Z0-9_]+
 
 
 class {
+	DEBUG("FOUND CLASS DEFINITION");
 	printf("class");
 	BEGIN(IN_CLASS_DEF);
 }
@@ -84,6 +92,10 @@ class {
 }
 
 <IN_CLASS_DEF>{TYPE} {
+	if( strlen(my_class) <= 0 ){
+		strncpy(my_class, yytext, CHAR_BUFFER_LENGTH);
+		DEBUG("FOUND MAIN CLASS '%s'", my_class);
+	}
 	print_class_with_namespace(yytext);
 }
 <IN_CLASS_DEF>\({WS}*abstract{WS}*\) {
@@ -91,6 +103,7 @@ class {
 }
 <IN_CLASS_DEF>\{ {
 	printf("{\n");
+	DEBUG("FOUND CLASS");
 	BEGIN(IN_CLASS);
 }
 
@@ -106,18 +119,28 @@ class {
 	depth = 0;
 }
 
+\/\*\* {
+	DEBUG("FOUND GLOBAL COMMENT");
+	printf("/**");
+	BEGIN(IN_CLASS_COMMENT);
+}
 <IN_CLASS>\/\*\* {
-	DEBUG("FOUND CLASS COMMENT");
+	DEBUG("FOUND COMMENT");
 	printf("/**");
 	BEGIN(IN_COMMENT);
+}
+<IN_COMMENT,IN_CLASS_COMMENT>[^(\*\/)]+ {
+	printf("%s", yytext);
+}
+<IN_CLASS_COMMENT>\*\/ {
+	BEGIN(INITIAL);
+	printf("*/");
+	DEBUG("END GLOBAL COMMENT");
 }
 <IN_COMMENT>\*\/ {
 	BEGIN(IN_CLASS);
 	printf("*/");
 	DEBUG("END CLASS COMMENT");
-}
-<IN_COMMENT>[^(\*\/)]+ {
-	printf(yytext);
 }
 
 <IN_PROPERTY>\( {
@@ -212,20 +235,24 @@ class {
 	depth = 0;
 }
 
+<IN_METHOD_ARGUMENTS>self {
+	print_class_with_namespace(my_class);
+	printf(" *self");
+}
 <IN_METHOD_ARGUMENTS>{TYPE} {
 	print_class_with_namespace(yytext);
 }
-
-<IN_METHOD_ARGUMENTS>\( {
-	depth++;
+<IN_METHOD_ARGUMENTS>\({WS}*check {
+	BEGIN(IN_METHOD_ARGUMENT_CHECK);
 }
+<IN_METHOD_ARGUMENT_CHECK>\) {
+	BEGIN(IN_METHOD_ARGUMENTS);
+}
+<IN_METHOD_ARGUMENT_CHECK>[^\)]+ { ; }
 
 <IN_METHOD_ARGUMENTS>\) {
-	depth--;
-	if( depth < 0 ){
-		printf(")");
-		BEGIN(AFTER_METHOD_ARGUMENTS);
-	}
+	printf(")");
+	BEGIN(AFTER_METHOD_ARGUMENTS);
 }
 
 <AFTER_METHOD_ARGUMENTS>\{ {
@@ -234,7 +261,8 @@ class {
 	depth = 0;
 }
 <AFTER_METHOD_ARGUMENTS>[^\{]+ {
-	; // ignore
+	if( depth == 0 )
+		printf("%s", yytext);
 }
 
 <IN_METHOD>\{ {
