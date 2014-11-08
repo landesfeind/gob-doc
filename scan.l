@@ -59,14 +59,14 @@ int yywrap(void) { return 1; }
 %x IN_PROPERTY_SETGET
 %x IN_VARIABLE_DEF
 %x IN_VARIABLE
-%x IN_CLASS_COMMENT
+%x IN_GLOBAL_COMMENT
 %x IN_COMMENT
 %x IN_C_CODE
 %x IN_METHOD_OR_VARIABLE_START
 
 WS [ \t\n]
 TYPE [a-zA-Z0-9]+(:[a-zA-Z0-9]+)*
-CLASS [a-zA-Z0-9]+(:[a-zA-Z0-9]+)+
+CLASSNAME [a-zA-Z0-9]+(:[a-zA-Z0-9]+)+
 FUNCNAME [a-zA-Z0-9_]+
 
 
@@ -91,7 +91,7 @@ class {
 	printf(":");
 }
 
-<IN_CLASS_DEF>{TYPE} {
+<IN_CLASS_DEF>{CLASSNAME} {
 	if( strlen(my_class) <= 0 ){
 		strncpy(my_class, yytext, CHAR_BUFFER_LENGTH);
 		DEBUG("FOUND MAIN CLASS '%s'", my_class);
@@ -122,17 +122,19 @@ class {
 \/\*\* {
 	DEBUG("FOUND GLOBAL COMMENT");
 	printf("/**");
-	BEGIN(IN_CLASS_COMMENT);
+	BEGIN(IN_GLOBAL_COMMENT);
 }
 <IN_CLASS>\/\*\* {
 	DEBUG("FOUND COMMENT");
 	printf("/**");
 	BEGIN(IN_COMMENT);
 }
-<IN_COMMENT,IN_CLASS_COMMENT>[^(\*\/)]+ {
-	printf("%s", yytext);
+<IN_COMMENT,IN_GLOBAL_COMMENT>{CLASSNAME} {
+	DEBUG("FOUND CLASSNAME IN COMMENT '%s'", yytext);
+	print_class_with_namespace(yytext);
 }
-<IN_CLASS_COMMENT>\*\/ {
+
+<IN_GLOBAL_COMMENT>\*\/ {
 	BEGIN(INITIAL);
 	printf("*/");
 	DEBUG("END GLOBAL COMMENT");
@@ -261,8 +263,7 @@ class {
 	depth = 0;
 }
 <AFTER_METHOD_ARGUMENTS>[^\{]+ {
-	if( depth == 0 )
-		printf("%s", yytext);
+	;
 }
 
 <IN_METHOD>\{ {
