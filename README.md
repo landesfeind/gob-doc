@@ -8,6 +8,13 @@ The doxygen filter parses `*.gob` files and produces C++ class definitions.
 The given class definitions are not valid C++ but can be parsed by Doxygen to
 generate a documentation as known from other projects.
 
+GOB2 does work with the `gtk-doc` [comment syntax](http://www.jirka.org/gob2.1.html) 
+very well. 
+However, I do not like the syntax and [the Gtk-Doc manual](http://www.gtk.org/gtk-doc) 
+was very confusing to me.
+Furthermore, I already had started to document several GOB2 project in Doxygen style. 
+A compliant Doxygen filter seemed to be less work though.
+
 ## Installation
 
 To compile `gob-doc` the following tools are required:
