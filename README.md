@@ -19,6 +19,9 @@ To compile `gob-doc` the following tools are required:
 `gob-doc` consists of a single `*.l` file which is transformed by the
 lexer to C code and subsequently compiled by the C compiler.
 
+The binary file can be put in any path and does not require any libraries than the
+default C libraries.
+
 ## Caveats
 
 As of today, `gob-doc` only supports a small subset of the syntax
