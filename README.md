@@ -31,6 +31,9 @@ to
 
 `INPUT_FILTER = gob-doc`
 
+Note: Do not adjust the `OPTIMIZE_OUTPUT_FOR_*` configuration parameters because `gob-doc` tries to
+generate C++ code which is natively parsed by Doxygen.
+
 ## Caveats
 
 As of today, `gob-doc` only supports a small subset of the syntax
