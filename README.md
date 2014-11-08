@@ -8,7 +8,6 @@ The doxygen filter parses `*.gob` files and produces C++ class definitions.
 The given class definitions are not valid C++ but can be parsed by Doxygen to
 generate a documentation as known from other projects.
 
-
 ## Installation
 
 To compile `gob-doc` the following tools are required:
@@ -21,6 +20,16 @@ lexer to C code and subsequently compiled by the C compiler.
 
 The binary file can be put in any path and does not require any libraries than the
 default C libraries.
+
+## Usage
+
+To use `gob-doc`, generate a new Doxygen file as usual and change the
+
+`INPUT_FILTER = `
+
+to
+
+`INPUT_FILTER = gob-doc`
 
 ## Caveats
 
