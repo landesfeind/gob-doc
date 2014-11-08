@@ -1,5 +1,11 @@
+CFLAGS += -std=c99
 
-CFLAGS += -std=c99 -g
+.PHONY: all clean
+
+all: gob-doc
+
+clean:
+	rm -f gob-doc *.o *.c
 
 gob-doc: scan.o
 	$(CC) -o $@  $(LDFLAGS) $^
